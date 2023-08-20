@@ -27,33 +27,30 @@ export const login = async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const user = await User.findOne({ username });
+        const userDoc = await User.findOne({ username });
 
-        if (!user) {
+        if (!userDoc) {
             res.status(400).json({
-                message: "User not found",
+                message: "Invalid Credentials",
                 success: false
             });
             return;
         }
 
-        const passOk = bcrypt.compareSync(password, user.password);
+        const passOk = bcrypt.compareSync(password, userDoc.password);
 
         if (passOk) {
-            // sendCookie(user, res, username);
-            return res.status(200).json({
-                message: 'Login successful',
-                success: true
-            });
-        } else {
-            return res.status(400).json({
-                message: "Invalid credentials",
+            sendCookie(userDoc, res, username);
+        }
+        else {
+            res.status(400).json({
+                message: "Invalid Credentials",
                 success: false
             });
         }
     } catch (error) {
-        return res.status(500).json({
-            message: "Internal server error",
+        res.status(500).json({
+            message: "An error occurred",
             success: false
         });
     }
