@@ -1,22 +1,23 @@
-import { User } from "../model/User.js";
+import {User} from "../model/User.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-// import { sendCookie } from '../util/sendCookie.js';
 
 const salt = bcrypt.genSaltSync(10);
 
 export const register = async (req, res) => {
-    const { username, password } = req.body;
+    const {name, username, password} = req.body;
 
     try {
-        await User.create({ username, password: await bcrypt.hashSync(password, salt) });
+        const doc = await User.create({name, username, password: await bcrypt.hashSync(password, salt)});
         res.status(200).json({
             message: 'User Created',
+            body: {
+                userId: doc._id
+            },
             success: true
         })
-    }
-    catch (e) {
-        res.status(400).json({
+    } catch (e) {
+        res.status(500).json({
             message: e,
             success: false
         });
@@ -24,10 +25,10 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    const { username, password } = req.body;
+    const {username, password} = req.body;
 
     try {
-        const userDoc = await User.findOne({ username });
+        const userDoc = await User.findOne({username});
 
         if (!userDoc) {
             res.status(400).json({
@@ -41,8 +42,7 @@ export const login = async (req, res) => {
 
         if (passOk) {
             sendCookie(userDoc, res, username);
-        }
-        else {
+        } else {
             res.status(400).json({
                 message: "Invalid Credentials",
                 success: false
@@ -58,11 +58,12 @@ export const login = async (req, res) => {
 
 
 export const profile = (req, res) => {
-    const { token } = req.cookies;
+    const {token} = req.cookies;
     jwt.verify(token, process.env.JWT_SECRET, {}, (err, info) => {
         if (err) throw err;
         res.status(200).json({
-            user: info });
+            user: info
+        });
     })
 };
 
